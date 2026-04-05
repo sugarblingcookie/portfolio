@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>주식 포트폴리오 리밸런싱</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ← 변경: 모바일 상단 바 -->
+<div class="mobile-topbar">
+  <span class="mobile-logo">📈 포트폴리오</span>
+  <div class="mobile-topbar-right">
+    <button class="theme-toggle" id="mobileThemeToggle" title="테마 전환">🌙</button>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="메뉴">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+
+<!-- 모바일 드로어 -->
+<div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="mobile-drawer-header">
+    <span class="mobile-drawer-logo">📈 포트폴리오</span>
+    <button class="mobile-drawer-close" id="mobileDrawerClose">✕</button>
+  </div>
+  <nav class="mobile-drawer-nav" id="mobileDrawerNav"></nav>
+</div>
+
+<!-- ← 변경: 사이드바 + 콘텐츠 2열 레이아웃 -->
+<div class="layout-wrapper">
+
+  <!-- ───────── 좌측 사이드바 ───────── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <h1 class="sidebar-title">📈 포트폴리오</h1>
+        <p class="sidebar-subtitle">리밸런싱 관리</p>
+      </div>
+      <button class="theme-toggle" id="themeToggle" title="라이트/다크 모드 전환">🌙</button>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-target="uploadSection">
+        <span class="nav-icon">📂</span>
+        <span class="nav-text"><span class="nav-step">STEP 1</span>포트폴리오 업로드</span>
+      </button>
+      <button class="nav-item" data-target="categorySection">
+        <span class="nav-icon">🗂</span>
+        <span class="nav-text"><span class="nav-step">STEP 2</span>카테고리 확인</span>
+      </button>
+      <button class="nav-item" data-target="targetSection">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-text"><span class="nav-step">STEP 3</span>목표 비중 설정</span>
+      </button>
+      <button class="nav-item" data-target="rebalanceSection">
+        <span class="nav-icon">🔄</span>
+        <span class="nav-text"><span class="nav-step">STEP 4</span>리밸런싱 결과</span>
+      </button>
+      <button class="nav-item" data-target="reportSection">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text"><span class="nav-step">STEP 5</span>리포트</span>
+      </button>
+      <div class="nav-divider"></div>
+      <button class="nav-item" data-target="dashboardSection">
+        <span class="nav-icon">📋</span>
+        <span class="nav-text">현재 포트폴리오</span>
+      </button>
+      <button class="nav-item" data-target="historySection">
+        <span class="nav-icon">📅</span>
+        <span class="nav-text">포트폴리오 히스토리</span>
+      </button>
+      <button class="nav-item" data-target="journalSection">
+        <span class="nav-icon">📓</span>
+        <span class="nav-text">투자 일지</span>
+      </button>
+      <button class="nav-item" data-target="dividendSection">
+        <span class="nav-icon">💰</span>
+        <span class="nav-text">배당금 기록</span>
+      </button>
+      <button class="nav-item" data-target="contributionSection">
+        <span class="nav-icon">💹</span>
+        <span class="nav-text">수익 기여도</span>
+      </button>
+      <button class="nav-item" data-target="compareSection">
+        <span class="nav-icon">🔍</span>
+        <span class="nav-text">날짜 간 비교</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- ───────── 우측 콘텐츠 영역 ───────── -->
+  <main class="main-content">
+
+    <!-- ── 소개 토글 ── --> <!-- ← 추가 -->
+    <div class="intro-toggle-bar" id="introToggleBar"> <!-- ← 추가 -->
+      <div class="intro-toggle-left"> <!-- ← 추가 -->
+        <span class="intro-toggle-dot"></span> <!-- ← 추가 -->
+        <div> <!-- ← 추가 -->
+          <div class="intro-toggle-text" id="introToggleText">이 앱이 처음이세요? 사용 가이드 보기</div> <!-- ← 추가 -->
+          <div class="intro-toggle-sub">앱 소개 및 4단계 사용법</div> <!-- ← 추가 -->
+        </div> <!-- ← 추가 -->
+      </div> <!-- ← 추가 -->
+      <span class="intro-toggle-arrow" id="introToggleArrow">▼</span> <!-- ← 추가 -->
+    </div> <!-- ← 추가 -->
+
+    <div class="intro-panel" id="introPanel"> <!-- ← 추가 -->
+      <div class="intro-inner"> <!-- ← 추가 -->
+        <p class="intro-hero-label">포트폴리오 리밸런싱 앱</p> <!-- ← 추가 -->
+        <h2 class="intro-hero-title">내 자산, 내가 직접 통합 관리하는<br>나만의 투자 대시보드</h2> <!-- ← 추가 -->
+        <p class="intro-hero-desc">증권사 앱은 계좌별로 분리되어 있어 전체 그림이 보이지 않습니다. 이 앱은 여러 계좌에 흩어진 종목을 하나로 모아 카테고리별 비중을 확인하고, 목표 배분에 맞게 리밸런싱 방향을 제시합니다. 매일 들여다보는 앱이 아니라, 2주에 한 번 혹은 분기별로 꺼내 쓰는 자산 점검 도구입니다.</p> <!-- ← 추가 -->
+
+        <div class="intro-divider"></div> <!-- ← 추가 -->
+
+        <p class="intro-section-label">이런 분께 유용해요</p> <!-- ← 추가 -->
+        <div class="intro-why-grid"> <!-- ← 추가 -->
+          <div class="intro-why-card"> <!-- ← 추가 -->
+            <div class="intro-why-icon">📂</div> <!-- ← 추가 -->
+            <div class="intro-why-title">여러 계좌를 쓰고 있어요</div> <!-- ← 추가 -->
+            <div class="intro-why-body">나스닥 ETF가 A계좌에도, B계좌에도 나뉘어 있어 실제 보유 비중을 파악하기 어렵다면, 카테고리로 묶어 한눈에 볼 수 있어요.</div> <!-- ← 추가 -->
+          </div> <!-- ← 추가 -->
+          <div class="intro-why-card"> <!-- ← 추가 -->
+            <div class="intro-why-icon">🎯</div> <!-- ← 추가 -->
+            <div class="intro-why-title">목표 비중을 정해두고 싶어요</div> <!-- ← 추가 -->
+            <div class="intro-why-body">국내주식 30%, 해외주식 50%, ETF 20% 처럼 카테고리별로 내가 원하는 자산 배분을 설정하고, 현재 상태와 얼마나 벗어났는지 확인할 수 있어요.</div> <!-- ← 추가 -->
+          </div> <!-- ← 추가 -->
+          <div class="intro-why-card"> <!-- ← 추가 -->
+            <div class="intro-why-icon">📈</div> <!-- ← 추가 -->
+            <div class="intro-why-title">투자 히스토리를 남기고 싶어요</div> <!-- ← 추가 -->
+            <div class="intro-why-body">[투자 일지] 탭에서는 매수/매도한 종목에 대해 어떤 이유와 마음가짐으로 투자했는지 기록을 남길 수 있어요. <br>[포트폴리오 히스토리] 탭에서는 날짜별 총액 추이에서 원금 대비 평가금액을 그래프로 함께 나타내 일정 기간별 자산 흐름을 확인할 수 있습니다.</div> <!-- ← 추가 -->
+          </div> <!-- ← 추가 -->
+        </div> <!-- ← 추가 -->
+
+        <div class="intro-divider"></div> <!-- ← 추가 -->
+
+        <p class="intro-section-label">사용 방법 — 4단계</p> <!-- ← 추가 -->
+
+        <div class="intro-step"> <!-- ← 추가 -->
+          <div class="intro-step-num">1</div> <!-- ← 추가 -->
+          <div class="intro-step-body"> <!-- ← 추가 -->
+            <div class="intro-step-title">CSV 업로드</div> <!-- ← 추가 -->
+            <div class="intro-step-desc">증권사 HTS/MTS에서 종목명·보유수량·매입금액·평가금액·수익률이 표시된 화면을 캡처하세요. 그런 다음 AI에 아래 프롬프트를 입력하면 바로 사용 가능한 CSV 파일을 받을 수 있어요. CSV 파일을 업로드한 뒤 기준 날짜를 선택하고 저장하면 히스토리로 쌓입니다.</div> <!-- ← 추가 -->
+            <div class="intro-prompt-box"> <!-- ← 추가 -->
+              <div class="intro-prompt-label">AI 프롬프트 — 복사해서 사용하세요</div> <!-- ← 추가 -->
+              <div class="intro-prompt-text" id="introPromptText">이 화면에서 종목명, 보유수량, 매입금액, 평가금액, 수익률을 확인한 뒤에 이 데이터를 표로 요약해서 보여줘. 그리고 내가 바로 다운로드 해서 사용할 수 있도록 csv 파일로 내보내기 해줘.</div> <!-- ← 추가 -->
+              <button class="intro-copy-btn" id="introCopyBtn">
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M11 5V3a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                복사
+              </button> <!-- ← 추가 -->
+            </div> <!-- ← 추가 -->
+            <span class="intro-step-tip">날짜를 정해 저장하면 이력으로 남아요</span> <!-- ← 추가 -->
+          </div> <!-- ← 추가 -->
+        </div> <!-- ← 추가 -->
+        <div class="intro-step-connector"></div> <!-- ← 추가 -->
+
+        <div class="intro-step"> <!-- ← 추가 -->
+          <div class="intro-step-num">2</div> <!-- ← 추가 -->
+          <div class="intro-step-body"> <!-- ← 추가 -->
+            <div class="intro-step-title">카테고리 확인 &amp; 수정</div> <!-- ← 추가 -->
+            <div class="intro-step-desc">앱이 종목명을 분석해 국내주식·해외주식·ETF를 자동으로 분류합니다. 나스닥 ETF가 두 계좌에 걸쳐 있어도 같은 카테고리로 묶을 수 있어요. 잘못 분류된 항목은 드롭다운으로 바로 수정하고, 나만의 카테고리를 추가할 수도 있습니다.</div> <!-- ← 추가 -->
+            <span class="intro-step-tip">한 번 수정하면 이후엔 자동 적용돼요</span> <!-- ← 추가 -->
+          </div> <!-- ← 추가 -->
+        </div> <!-- ← 추가 -->
+        <div class="intro-step-connector"></div> <!-- ← 추가 -->
+
+        <div class="intro-step"> <!-- ← 추가 -->
+          <div class="intro-step-num">3</div> <!-- ← 추가 -->
+          <div class="intro-step-body"> <!-- ← 추가 -->
+            <div class="intro-step-title">목표 비중 설정</div> <!-- ← 추가 -->
+            <div class="intro-step-desc">카테고리별 목표 비중(%)을 입력하고, 카테고리 안에서 종목별 비중도 설정하세요. 합계가 100%가 되도록 안내해 드립니다. 한 번 저장하면 다음 점검 때도 그대로 불러와 비교할 수 있습니다.</div> <!-- ← 추가 -->
+            <span class="intro-step-tip">카테고리 합계가 100%인지 꼭 확인하세요</span> <!-- ← 추가 -->
+          </div> <!-- ← 추가 -->
+        </div> <!-- ← 추가 -->
+        <div class="intro-step-connector"></div> <!-- ← 추가 -->
+
+        <div class="intro-step"> <!-- ← 추가 -->
+          <div class="intro-step-num">4</div> <!-- ← 추가 -->
+          <div class="intro-step-body"> <!-- ← 추가 -->
+            <div class="intro-step-title">리밸런싱 결과 확인</div> <!-- ← 추가 -->
+            <div class="intro-step-desc">목표 비중과 현재 비중의 차이를 계산해 종목별 매수·매도·유지 여부를 보여줍니다. 추가 투자금을 입력하거나 매수만 하는 방식을 선택할 수도 있어요. 현재가를 입력하면 몇 주를 사고팔아야 할지 수량도 자동 계산됩니다.</div> <!-- ← 추가 -->
+            <span class="intro-step-tip">매수만 모드로 세금 없이 리밸런싱할 수 있어요</span> <!-- ← 추가 -->
+          </div> <!-- ← 추가 -->
+        </div> <!-- ← 추가 -->
+
+        <div class="intro-note-box"> <!-- ← 추가 -->
+          <div class="intro-note-head">실시간 시세와 연동되지 않아요</div> <!-- ← 추가 -->
+          <div class="intro-note-body">이 앱은 증권사 서버에 접속하거나 시세를 자동으로 가져오지 않습니다. 대신 내가 원하는 시점에 직접 데이터를 입력하고, 나만의 주기로 자산을 점검하는 방식으로 동작합니다. 데이터는 브라우저 내부(localStorage)에만 저장되며 외부로 전송되지 않아요. 기기를 바꾸거나 백업이 필요할 때는 [STEP 1] 하단의 '내보내기' 버튼으로 백업하고, '가져오기' 버튼으로 언제든 복원할 수 있습니다.</div> <!-- ← 추가 -->
+        </div> <!-- ← 추가 -->
+      </div> <!-- ← 추가 -->
+    </div> <!-- ← 추가 -->
+    <!-- ── /소개 토글 ── --> <!-- ← 추가 -->
+
+    <!-- ── STEP 1: CSV 업로드 ── -->
+    <section class="page-section active" id="uploadSection">
+      <h2 class="section-title">📂 STEP 1 · 포트폴리오 업로드</h2>
+      <div class="upload-area" id="uploadArea">
+        <span class="upload-icon">📂</span>
+        <p>CSV 파일을 드래그하거나 버튼을 클릭하세요</p>
+        <p class="upload-hint">형식: 종목명, 보유수량, 원화매입금액, 원화평가금액, 수익률</p>
+        <label class="btn btn-primary" for="fileInput">📁 파일 선택</label>
+        <input type="file" id="fileInput" accept=".csv" hidden />
+      </div>
+      <div class="date-row">
+        <label for="uploadDate">기준 날짜</label>
+        <input type="date" id="uploadDate" />
+        <button class="btn btn-success" id="saveBtn" disabled>💾 저장</button>
+        <button class="btn btn-outline" id="exportBtn">📤 내보내기</button>
+        <label class="btn btn-outline" for="importInput">📥 가져오기</label>
+        <input type="file" id="importInput" accept=".json" hidden />
+        <button class="btn btn-danger" id="clearBtn">🗑 전체 삭제</button>
+      </div>
+      <div class="date-delete-section" id="dateDeleteSection" style="display:none">
+        <h3 class="date-delete-title">🗓 저장된 날짜별 데이터 관리</h3>
+        <div id="dateChipList" class="date-chip-list"></div>
+      </div>
+      <div id="uploadStatus" class="upload-status hidden"></div>
+    </section>
+
+    <!-- ── STEP 2: 카테고리 확인/수정 ── -->
+    <section class="page-section" id="categorySection">
+      <h2 class="section-title">🗂 STEP 2 · 카테고리 확인 & 수정</h2>
+      <p class="edit-hint">앱이 자동으로 분류했어요. 잘못된 항목을 수정하고 확인을 눌러주세요.</p>
+      <div class="category-manage">
+        <span class="label-sm">카테고리 관리</span>
+        <div id="categoryTagList" class="tag-list"></div>
+        <div class="add-category-row">
+          <input type="text" id="newCategoryInput" placeholder="새 카테고리 이름" />
+          <button class="btn btn-outline btn-sm" id="addCategoryBtn">➕ 추가</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table id="categoryTable">
+          <thead>
+            <tr><th>종목명</th><th>보유수량</th><th>평가금액</th><th>카테고리</th></tr>
+          </thead>
+          <tbody id="categoryTableBody"></tbody>
+        </table>
+      </div>
+      <div class="edit-actions">
+        <button class="btn btn-success" id="confirmCategoryBtn">✅ 카테고리 확인 완료</button>
+      </div>
+    </section>
+
+    <!-- ── STEP 3: 목표 비중 설정 ── -->
+    <section class="page-section" id="targetSection">
+      <h2 class="section-title">🎯 STEP 3 · 목표 비중 설정</h2>
+      <p class="edit-hint">카테고리별 목표 비중을 설정하고, 카테고리 안에서 종목별 비중도 설정하세요.</p>
+      <div id="targetContent"></div>
+      <div class="total-check">
+        <span>카테고리 합계:</span>
+        <span id="categoryTotalDisplay" class="total-num">0%</span>
+        <span id="categoryTotalStatus"></span>
+      </div>
+      <div class="edit-actions">
+        <button class="btn btn-success" id="saveTargetBtn">💾 목표 저장 & 계산하기</button>
+      </div>
+    </section>
+
+    <!-- ── STEP 4: 리밸런싱 결과 ── -->
+    <section class="page-section" id="rebalanceSection">
+      <h2 class="section-title">🔄 STEP 4 · 리밸런싱 결과</h2>
+      <div class="rebalance-options">
+        <div class="option-group">
+          <label>추가 투자금액 (선택)</label>
+          <div class="input-with-unit">
+            <input type="number" id="extraMoney" placeholder="0" min="0" step="10000" />
+            <span>원</span>
+          </div>
+        </div>
+        <div class="option-group">
+          <label>리밸런싱 방식</label>
+          <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="rebalMode" value="both" checked /> 매수 + 매도</label>
+            <label class="radio-label"><input type="radio" name="rebalMode" value="buyOnly" /> 매수만</label>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="calcBtn">🔄 리밸런싱 계산하기</button>
+      </div>
+      <div id="rebalanceResult" class="hidden">
+        <div class="summary-cards" id="summaryCards"></div>
+        <div class="table-wrapper" style="margin-top:1.5rem">
+          <table id="rebalanceTable">
+            <thead>
+              <tr>
+                <th>종목명</th>
+                <th><button class="sort-btn" data-table="rebal" data-col="evalAmt">현재금액<span class="sort-icon">↑</span></button></th>
+                <th><button class="sort-btn" data-table="rebal" data-col="currentPct">현재비중<span class="sort-icon">↑</span></button></th>
+                <th><button class="sort-btn" data-table="rebal" data-col="catPct">목표비중<span class="sort-icon">↑</span></button></th>
+                <th><button class="sort-btn" data-table="rebal" data-col="diffPct">차이<span class="sort-icon">↑</span></button></th>
+                <th>액션</th>
+                <th><button class="sort-btn" data-table="rebal" data-col="adjDiff">금액<span class="sort-icon">↑</span></button></th>
+                <th>수량(예상)</th>
+              </tr>
+            </thead>
+            <tbody id="rebalanceTableBody"></tbody>
+          </table>
+        </div>
+        <p class="edit-hint" style="margin-top:.8rem">💡 현재가를 입력하면 매수/매도 수량이 자동 계산돼요</p>
+      </div>
+    </section>
+
+    <!-- ── 현재 포트폴리오 + 차트 ── -->
+    <section class="page-section" id="dashboardSection">
+
+      <!-- ← 변경: 차트를 위로, 테이블을 아래로 -->
+      <h2 class="section-title">🥧 종목별 비중 (평가금액 기준)</h2>
+      <div class="chart-grid">
+        <div>
+          <h3 class="chart-sub-title">카테고리별</h3>
+          <div class="chart-container"><canvas id="categoryPieChart"></canvas></div>
+          <div id="categoryLegend" class="legend-list"></div>
+        </div>
+        <div>
+          <h3 class="chart-sub-title">종목별</h3>
+          <div class="chart-container"><canvas id="pieChart"></canvas></div>
+          <div id="legendList" class="legend-list"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:2rem">
+        <h2 class="section-title">📋 현재 포트폴리오</h2>
+        <div class="table-wrapper">
+          <table id="portfolioTable">
+            <thead>
+              <tr>
+                <th>종목명</th><th>보유수량</th>
+                <th><button class="sort-btn" data-table="portfolio" data-col="buyAmt">매입금액<span class="sort-icon">↑</span></button></th>
+                <th><button class="sort-btn" data-table="portfolio" data-col="evalAmt">평가금액<span class="sort-icon">↑</span></button></th>
+                <th><button class="sort-btn" data-table="portfolio" data-col="profit">수익률<span class="sort-icon">↑</span></button></th>
+                <th><button class="sort-btn" data-table="portfolio" data-col="weight">비중<span class="sort-icon">↑</span></button></th>
+                <th>일지</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+            <tfoot id="tableFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── 날짜별 추이 + 슬라이더 ── -->
+    <section class="page-section" id="historySection">
+      <div class="line-chart-header">
+        <h2 class="section-title" style="margin:0">📅 날짜별 총액 추이</h2>
+        <div class="range-seg" id="lineChartRange">
+          <button class="range-seg__btn" data-range="3M">3M</button>
+          <button class="range-seg__btn" data-range="6M">6M</button>
+          <button class="range-seg__btn" data-range="1Y">1Y</button>
+          <button class="range-seg__btn" data-range="3Y">3Y</button>
+          <button class="range-seg__btn range-seg__btn--active" data-range="ALL">전체</button>
+        </div>
+      </div>
+      <div class="chart-container chart-container--line">
+        <canvas id="lineChart"></canvas>
+      </div>
+      <div style="margin-top:2rem">
+        <h2 class="section-title">🗓 날짜별 포트폴리오 변화</h2>
+        <div class="history-nav" style="position:relative">
+          <button class="btn btn-outline" id="prevDate">◀ 이전</button>
+          <button class="hist-date-btn" id="histDateBtn">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+              <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M5 1v4M11 1v4M1 7h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span id="currentDateLabel" class="date-label">-</span>
+          </button>
+          <button class="btn btn-outline" id="nextDate">다음 ▶</button>
+          <!-- 캘린더 팝업 -->
+          <div id="histCalPop" class="hist-cal-pop hidden">
+            <!-- 일 뷰 -->
+            <div id="histCalDayView">
+              <div class="hist-cal-head">
+                <button class="hist-cal-nav" id="histCalPrev">‹</button>
+                <button class="hist-cal-month-btn" id="histCalMonthLabel"></button>
+                <button class="hist-cal-nav" id="histCalNext">›</button>
+              </div>
+              <div class="hist-cal-dow">
+                <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+              </div>
+              <div class="hist-cal-grid" id="histCalGrid"></div>
+            </div>
+            <!-- 월 선택 뷰 -->
+            <div id="histCalMonthView" class="hidden">
+              <div class="hist-cal-head">
+                <button class="hist-cal-nav" id="histCalYearPrev">‹</button>
+                <span id="histCalYearLabel"></span>
+                <button class="hist-cal-nav" id="histCalYearNext">›</button>
+              </div>
+              <div class="hist-cal-month-grid" id="histCalMonthGrid"></div>
+            </div>
+          </div>
+        </div>
+        <div class="history-grid">
+          <div class="chart-container"><canvas id="historyPieChart"></canvas></div>
+          <div id="historyLegend" class="legend-list"></div>
+        </div>
+        <div class="table-wrapper" style="margin-top:1rem">
+          <table id="historyTable">
+            <thead>
+              <tr>
+                <th>종목명</th><th>보유수량</th>
+                <th><button class="sort-btn" data-table="history" data-col="buyAmt">매입금액<span class="sort-icon">↑</span></button></th>
+                <th><button class="sort-btn" data-table="history" data-col="evalAmt">평가금액<span class="sort-icon">↑</span></button></th>
+                <th><button class="sort-btn" data-table="history" data-col="profit">수익률<span class="sort-icon">↑</span></button></th>
+                <th><button class="sort-btn" data-table="history" data-col="weight">비중<span class="sort-icon">↑</span></button></th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+            <tfoot id="historyTableFoot"></tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 5: 투자 일지 ── -->
+    <section class="page-section" id="journalSection">
+      <h2 class="section-title">📓 투자 일지</h2>
+      <p class="edit-hint">종목 테이블의 <strong>일지 기록</strong> 버튼으로 새 항목을 추가하거나 아래에서 직접 추가하세요.</p>
+      <div class="journal-top-bar">
+        <div class="journal-tabs">
+          <button class="journal-tab active" data-tab="timeline">📅 날짜순</button>
+          <button class="journal-tab" data-tab="bystock">📊 종목별</button>
+        </div>
+        <button class="btn btn-primary btn-sm" id="newJournalBtn">✏️ 새 일지 작성</button>
+      </div>
+      <div id="journalTimeline" class="journal-pane"></div>
+      <div id="journalByStock" class="journal-pane hidden"></div>
+    </section>
+
+    <!-- ── STEP 6: 배당금 기록 ── -->
+    <section class="page-section" id="dividendSection">
+      <h2 class="section-title">💰 배당금 기록</h2>
+      <p class="edit-hint">종목별 배당금을 기록하고 누적 배당 통계를 확인하세요. 매입금액 대비 YOC(실질 배당수익률)도 자동 계산됩니다.</p>
+      <div class="journal-top-bar">
+        <div class="journal-tabs">
+          <button class="div-tab active" data-tab="divTimeline">📅 수령 내역</button>
+          <button class="div-tab" data-tab="divByStock">📊 종목별 합계</button>
+          <button class="div-tab" data-tab="divByYear">📆 연도별 합계</button>
+        </div>
+        <button class="btn btn-primary btn-sm" id="newDividendBtn">➕ 배당금 추가</button>
+      </div>
+      <div id="divSummaryCards" class="summary-cards" style="margin-bottom:1.2rem"></div>
+      <div id="divTimeline" class="journal-pane"></div>
+      <div id="divByStock" class="journal-pane hidden"></div>
+      <div id="divByYear" class="journal-pane hidden">
+        <div class="div-bar-wrap"><canvas id="divBarChart"></canvas></div>
+        <div id="divYearTable" style="margin-top:1.2rem"></div>
+      </div>
+    </section>
+
+    <!-- ── STEP 7: 수익 기여도 분석 ── -->
+    <section class="page-section" id="contributionSection">
+      <h2 class="section-title">💹 종목별 수익 기여도 분석</h2>
+      <p class="edit-hint">각 종목이 전체 수익에 얼마나 기여했는지 분석합니다. 저장된 날짜 데이터가 2개 이상 있을 때 사용할 수 있습니다.</p>
+      <div class="contrib-controls">
+        <div class="option-group">
+          <label>기준 날짜 (시작)</label>
+          <select id="contribDateFrom" class="cat-select"></select>
+        </div>
+        <div class="option-group">
+          <label>비교 날짜 (종료)</label>
+          <select id="contribDateTo" class="cat-select"></select>
+        </div>
+        <button class="btn btn-primary" id="calcContribBtn">📊 분석하기</button>
+      </div>
+      <div id="contribResult" class="hidden">
+        <div class="summary-cards" id="contribSummaryCards" style="margin-bottom:1.5rem"></div>
+        <div class="contrib-chart-wrap"><canvas id="contribBarChart"></canvas></div>
+        <div class="table-wrapper" style="margin-top:1.5rem">
+          <table id="contribTable">
+            <thead>
+              <tr>
+                <th>순위</th><th>종목명</th><th>카테고리</th>
+                <th>시작 평가금액</th><th>종료 평가금액</th>
+                <th>수익금액</th><th>수익률</th><th>기여도</th>
+              </tr>
+            </thead>
+            <tbody id="contribTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 8: 날짜 간 변동 비교 ── -->
+    <section class="page-section" id="compareSection">
+      <h2 class="section-title">🔍 날짜 간 변동 비교</h2>
+      <p class="edit-hint">두 날짜 사이에 수량·평가금액·수익률이 어떻게 바뀌었는지 비교합니다.</p>
+      <div class="contrib-controls">
+        <div class="option-group">
+          <label>이전 날짜</label>
+          <select id="compareDateA" class="cat-select"></select>
+        </div>
+        <div class="option-group">
+          <label>이후 날짜</label>
+          <select id="compareDateB" class="cat-select"></select>
+        </div>
+        <button class="btn btn-primary" id="calcCompareBtn">🔍 비교하기</button>
+      </div>
+      <div id="compareResult" class="hidden">
+        <div class="summary-cards" id="compareSummaryCards" style="margin-bottom:1.5rem"></div>
+        <div class="compare-filter-row">
+          <label class="radio-label"><input type="radio" name="compareFilter" value="all" checked /> 전체</label>
+          <label class="radio-label"><input type="radio" name="compareFilter" value="changed" /> 변동 종목만</label>
+          <label class="radio-label"><input type="radio" name="compareFilter" value="new" /> 신규 편입</label>
+          <label class="radio-label"><input type="radio" name="compareFilter" value="removed" /> 제외 종목</label>
+        </div>
+        <div class="table-wrapper" style="margin-top:.8rem">
+          <table id="compareTable">
+            <thead>
+              <tr>
+                <th>종목명</th><th>카테고리</th><th>수량 변동</th>
+                <th>평가금액 변동</th><th>수익률 변동</th><th>비중 변동</th><th>상태</th>
+              </tr>
+            </thead>
+            <tbody id="compareTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 9: 월간 요약 리포트 ── -->
+    <section class="page-section" id="reportSection">
+      <h2 class="section-title">📊 STEP 5 · 리포트</h2>
+      <div class="report-type-tabs">
+        <button class="report-type-tab active" data-report-type="monthly">📅 월간 리포트</button>
+        <button class="report-type-tab" data-report-type="annual">📆 연간 리포트</button>
+      </div>
+      <!-- 월간 컨트롤 -->
+      <div id="reportMonthlyControls" class="contrib-controls">
+        <div class="option-group">
+          <label>리포트 월 선택</label>
+          <select id="reportMonthSelect" class="cat-select"></select>
+        </div>
+        <button class="btn btn-primary" id="genReportBtn">📋 리포트 생성</button>
+        <button class="btn btn-outline hidden" id="printReportBtn">🖨️ 인쇄 / PDF 저장</button>
+      </div>
+      <!-- 연간 컨트롤 -->
+      <div id="reportAnnualControls" class="contrib-controls hidden">
+        <div class="option-group">
+          <label>리포트 연도 선택</label>
+          <select id="reportYearSelect" class="cat-select"></select>
+        </div>
+        <button class="btn btn-primary" id="genAnnualReportBtn">📋 연간 리포트 생성</button>
+        <button class="btn btn-outline hidden" id="printAnnualReportBtn">🖨️ 인쇄 / PDF 저장</button>
+      </div>
+      <div id="reportOutput" class="hidden"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ── 투자 일지 모달 ── -->
+<div id="journalModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">✏️ 투자 일지 작성</h3>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label>날짜</label><input type="date" id="jDate" /></div>
+      <div class="form-row">
+        <label>종목명</label>
+        <input type="text" id="jName" placeholder="직접 입력 또는 선택" list="jNameList" />
+        <datalist id="jNameList"></datalist>
+      </div>
+      <div class="form-row">
+        <label>구분</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="jType" value="buy" checked /> 🟥 매수</label>
+          <label class="radio-label"><input type="radio" name="jType" value="sell" /> 🟦 매도</label>
+          <label class="radio-label"><input type="radio" name="jType" value="watch" /> 👁 관찰</label>
+        </div>
+      </div>
+      <div class="form-row" id="jQtyPriceRow">
+        <label>수량 / 가격</label>
+        <div class="qty-price-inputs">
+          <input type="number" id="jQty" placeholder="수량" min="0" step="1" /><span>주</span>
+          <input type="number" id="jPrice" placeholder="가격" min="0" step="1" /><span>원</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>매매 이유</label>
+        <textarea id="jReason" rows="3" placeholder="이 종목을 매수/매도한 이유를 적어보세요"></textarea>
+      </div>
+      <div class="form-row">
+        <label>감정 / 확신도 태그</label>
+        <div class="emotion-tags" id="emotionTags">
+          <button type="button" class="etag" data-tag="확신↑">확신↑</button>
+          <button type="button" class="etag" data-tag="확신↓">확신↓</button>
+          <button type="button" class="etag" data-tag="충동매수">충동매수</button>
+          <button type="button" class="etag" data-tag="계획매매">계획매매</button>
+          <button type="button" class="etag" data-tag="손절">손절</button>
+          <button type="button" class="etag" data-tag="익절">익절</button>
+          <button type="button" class="etag" data-tag="분할매수">분할매수</button>
+          <button type="button" class="etag" data-tag="분할매도">분할매도</button>
+          <button type="button" class="etag" data-tag="불안">불안</button>
+          <button type="button" class="etag" data-tag="확신">확신</button>
+        </div>
+      </div>
+      <div id="qtyChangeBanner" class="qty-change-banner hidden"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="modalCancel">취소</button>
+      <button class="btn btn-success" id="modalSave">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 날짜 선택 팝업 (CSV 업로드 후) ── -->
+<div id="datePickerModal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-header">
+      <h3 class="modal-title">📅 기준 날짜 선택</h3>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:1rem;color:var(--text-secondary);font-size:.95rem">업로드한 데이터의 기준 날짜를 선택하세요.<br>선택하면 자동으로 저장됩니다.</p>
+      <div class="form-row">
+        <label>기준 날짜</label>
+        <input type="date" id="datePickerInput" style="width:100%" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="datePickerCancel">취소</button>
+      <button class="btn btn-success" id="datePickerConfirm">💾 저장 &amp; 다음 단계</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 배당금 입력 모달 ── -->
+<div id="dividendModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title" id="divModalTitle">💰 배당금 기록</h3>
+      <button class="modal-close" id="divModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label>수령일</label><input type="date" id="dDate" /></div>
+      <div class="form-row">
+        <label>종목명</label>
+        <input type="text" id="dName" placeholder="직접 입력 또는 선택" list="dNameList" />
+        <datalist id="dNameList"></datalist>
+      </div>
+      <div class="form-row">
+        <label>배당 종류</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="dType" value="cash" checked /> 💵 현금배당</label>
+          <label class="radio-label"><input type="radio" name="dType" value="stock" /> 📦 주식배당</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>세전 배당금액 (원)</label>
+        <input type="number" id="dGross" placeholder="0" min="0" step="1" />
+      </div>
+      <div class="form-row">
+        <label>세후 배당금액 (원)</label>
+        <div style="display:flex;gap:.6rem;align-items:center">
+          <input type="number" id="dNet" placeholder="자동 계산 또는 직접 입력" min="0" step="1" style="flex:1" />
+          <button type="button" class="btn btn-outline btn-sm" id="dAutoTaxBtn">세금 자동계산 (15.4%)</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>메모 (선택)</label>
+        <input type="text" id="dMemo" placeholder="예: 2024년 1분기 배당" />
+      </div>
+      <div id="dYocPreview" class="qty-change-banner hidden" style="border-color:#10b981;background:#f0fdf4;color:#065f46"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="divModalCancel">취소</button>
+      <button class="btn btn-success" id="divModalSave">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
